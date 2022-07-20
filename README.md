@@ -5,7 +5,7 @@ Deppth is a high-level I/O interface for package files in the games Transistor, 
 
 ## Installation
 
-To install Deppth, download the latest [wheel](https://github.com/quaerus/deppth/releases) and `pip install` it. Then read the following instructions to install dependencies.
+To install Deppth, download the latest [wheel](https://github.com/SGG-Modding/deppth/releases) and `pip install` it. Then read the following instructions to install dependencies.
 
 ### Dependencies
 
