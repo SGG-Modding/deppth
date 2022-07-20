@@ -278,18 +278,25 @@ class TextureEntry(XNBAssetEntryBase):
       image = PIL.Image.frombytes('RGBA', self.imgsize, imgbytes, 'raw', 'BGRA')
     elif imgformat == 6:
       image = PIL.Image.frombytes('RGBA', self.imgsize, imgbytes, 'bcn', (3,))
+    elif imgformat == 12:
+      image = PIL.Image.frombytes('RGBA', self.imgsize, imgbytes, 'raw', ('A',))
     elif imgformat == 28:
       image = PIL.Image.frombytes('RGBA', self.imgsize, imgbytes, 'bcn', (7,))
+    elif imgformat == 27:
+      image = PIL.Image.frombytes('LA', self.imgsize, imgbytes)
     else:
       raise Exception(f'Unsupported image format {imgformat}')
     return image
   
   @requires('PIL.Image')
   def _import_image_data(self, path):
-    image = PIL.Image.open(path)
+    if os.path.splitext(path)[1] == '.DDS':
+      xnb_inner_data = self._create_inner_xnb_dds(path)
+    else:
+      image = PIL.Image.open(path)
+      xnb_inner_data = self._create_inner_xnb(image)
 
     dataio = _BytesIO()
-    xnb_inner_data = self._create_inner_xnb(image)
 
     # Write the XNB 'magic' header
     dataio.write(bytes('XNBw', 'ascii'))
@@ -321,11 +328,26 @@ class TextureEntry(XNBAssetEntryBase):
     dataio.write(imgbytes)
     return dataio.getvalue()
 
+  @requires('PIL.Image')
+  def _create_inner_xnb_dds(self, path):
+    dataio = _BytesIO()
+    width, height = PIL.Image.open(path).size
+    dataio.write_int(28, 'little') # 28 = BC7
+    dataio.write_int(width, 'little')
+    dataio.write_int(height, 'little')
+    dataio.write_int(1, 'little')
+    with open(path, 'rb') as f:
+      f.read(148)  # DDS file header is 128 bytes
+      imgbytes = f.read()
+    dataio.write_int(len(imgbytes), 'little')
+    dataio.write(imgbytes)
+    return dataio.getvalue()
+
   def import_file(self, path):
     # If the user didn't give a supported image format, don't import here
-    if os.path.splitext(path)[1] not in ['.png', '.jpg', '.bmp']:
+    if os.path.splitext(path)[1] not in ['.png', '.jpg', '.bmp', '.DDS']:
       return super()._import(path)
-
+      
     self._import_image_data(path)
 
   def _unpack(self, path):
@@ -334,19 +356,7 @@ class TextureEntry(XNBAssetEntryBase):
     fullpath = os.path.join(path, subpath)
     os.makedirs(fullpath, exist_ok=True)
 
-    # First, get the image out of the entry data
-    image = self._get_image()
-    atlas = self.manifest_entry
-    for subatlas in atlas.subAtlases:
-      rect = subatlas['rect']
-      box = (rect['x'], 
-      rect['y'], 
-      rect['x']+rect['width'], 
-      rect['y']+rect['height'])
-      subimage = image.crop(box)
-      subatlasdir, subatlasfile = os.path.split(subatlas['name'])
-      os.makedirs(os.path.join(fullpath, subatlasdir), exist_ok=True)
-      subimage.save(os.path.join(fullpath, subatlasdir, f'{subatlasfile}.png'))
+    self._export_subtextures(fullpath)
 
   @requires('PIL.Image')
   def _export_subtextures(self, target):
@@ -360,9 +370,18 @@ class TextureEntry(XNBAssetEntryBase):
       rect['x']+rect['width'], 
       rect['y']+rect['height'])
       subimage = image.crop(box)
+      subtexture = self._get_original_image(subimage, subatlas['originalSize'], subatlas['topLeft'], subatlas['scaleRatio'])
       subatlasdir, subatlasfile = os.path.split(subatlas['name'])
       os.makedirs(os.path.join(target, subatlasdir), exist_ok=True)
-      subimage.save(os.path.join(target, subatlasdir, f'{subatlasfile}.png'))
+      subtexture.save(os.path.join(target, subatlasdir, f'{subatlasfile}.png'))
+
+  def _get_original_image(self, image, original_size, top_left, scale_ratio):
+    canvas_width = round(original_size['x']/scale_ratio['x'])
+    canvas_height = round(original_size['y']/scale_ratio['y'])
+    canvas = PIL.Image.new("RGBA", (canvas_width, canvas_height))
+    canvas.paste(image, (top_left['x'], top_left['y']))
+    canvas.resize((original_size['x'], original_size['y']))
+    return canvas
 
   def _extraction_path(self, target):
     return os.path.join(target, 'textures', 'atlases', self.name.split('\\')[-1])

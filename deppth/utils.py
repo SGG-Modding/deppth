@@ -3,17 +3,21 @@ import os
 import struct
 import io
 
-def requires(moduleName):
-    """Marks a function as requiring an optional module dependency."""
-    def decorate_function(fn):
-        def wrapper(*args, **kwargs):
-            if moduleName in sys.modules:
-                result = fn(*args, **kwargs)
-                return result
-            else:
-                raise ImportError(f'{fn.__name__}: This action requires the {moduleName} module.')
-        return wrapper
-    return decorate_function
+def requires(*moduleNames):
+  """Marks a function as requiring an optional module dependency."""
+  def decorate_function(fn):
+    def wrapper(*args, **kwargs):
+      allModules = True
+      for moduleName in moduleNames:
+        if not moduleName in sys.modules:
+          allModules = False
+      if allModules:
+        result = fn(*args, **kwargs)
+        return result
+      else:
+        raise ImportError(f"{fn.__name__}: This action requires missing modules: {' '.join(moduleNames)}")
+    return wrapper
+  return decorate_function
 
 class IOExtensionMixin():
   """Provides various helper functions to make reading packages from streams easier."""

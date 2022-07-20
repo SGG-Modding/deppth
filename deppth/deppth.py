@@ -5,9 +5,11 @@ __version__ = "0.1.0.0"
 import os
 import sys
 import fnmatch
+import subprocess
 
 from .sggpio import PackageWithManifestReader, PackageWithManifestWriter, PackageReader, PackageWriter
 from .entries import AtlasEntry, TextureEntry
+from .texpacking import build_atlases, transform_atlas
  
 def list_contents(name, *patterns, logger=lambda s: None):
   with PackageWithManifestReader(name) as f:
@@ -59,7 +61,7 @@ def extract(package, target_dir, *entries, subtextures=False, logger=lambda s: N
           inc_f.write(include)
           inc_f.write('\n')
 
-def pack(source_dir, package, *entries, logger=lambda s: None):
+def pack(source_dir, package, *entries, subtextures=False, logger=lambda s: None, codec='RGBA'):
   curdir = os.getcwd()
   source = os.path.join(curdir, source_dir)
   target = package
@@ -68,6 +70,22 @@ def pack(source_dir, package, *entries, logger=lambda s: None):
     target = f'{os.path.basename(source)}.pkg'
 
   logger(f'Packing {source} to target package {target}')
+
+  if subtextures:
+    temp_dir = source + '_temp'
+    logger('Creating Texture Atlases...')
+    pack_subtextures(os.path.join(source, 'textures'), temp_dir, f'{os.path.splitext(target)[0]}_Textures', width=2200, height=2200)
+    logger('Success!')
+    source = temp_dir
+
+  texconv = False
+  if codec == 'bc7':
+    texconv = True
+    texconvformat = 'BC7_UNORM'
+
+  if texconv:
+    # All png atlases, chosen format, overwrite, no mipmap levels
+    do_texconv(os.path.join(source, 'textures', 'atlases'), texconvformat)
 
   manifest_dir = os.path.join(source, 'manifest')
   manifest_entries = []
@@ -83,7 +101,9 @@ def pack(source_dir, package, *entries, logger=lambda s: None):
   with PackageWriter(target, compressor='lz4') as pkg_writer, PackageWriter(f'{target}_manifest') as manifest_writer:
     for manifest_entry in manifest_entries:
       entry_name = manifest_entry.name.split('\\')[-1]
-      entry_sheet_path = os.path.join(source, 'textures', 'atlases', f'{entry_name}.png')
+      entry_sheet_path = os.path.join(source, 'textures', 'atlases', f'{entry_name}.DDS')
+      if not os.path.exists(entry_sheet_path):
+        entry_sheet_path = os.path.join(source, 'textures', 'atlases', f'{entry_name}.png')
       if os.path.exists(entry_sheet_path):
         logger(f'Packing {entry_sheet_path}')
         manifest_writer.write_entry(manifest_entry)
@@ -146,3 +166,29 @@ def _entry_match(patterns, entry):
       if fnmatch.fnmatch(entry.short_name(), pattern):
         return True
   return False
+
+def pack_subtextures(source_dir, target_dir, basename, width=2048, height=2048, include_hulls=False):
+  tex_dir = os.path.join(target_dir, 'textures', 'atlases')
+  atlas_dir = os.path.join(target_dir, 'manifest')
+
+  os.makedirs(tex_dir, exist_ok=True)
+  os.makedirs(atlas_dir, exist_ok=True)
+
+  hulls, namemap = build_atlases(source_dir, tex_dir, basename, (width, height), include_hulls=include_hulls)
+
+  # Switch working directory to where the textures and base atlases are
+  wd = os.getcwd()
+  os.chdir(tex_dir)
+
+  index = 0
+  target_dir = os.path.join('..','..','manifest')
+  while os.path.exists(f'{basename}{index}.json'):
+    transform_atlas(f'{basename}{index}.json', namemap, hulls, source_dir, target_dir)
+    index += 1
+
+  # Restore old working directory
+  os.chdir(wd)
+  
+def do_texconv(source_dir, format):
+  # All png atlases, chosen format, overwrite, no mipmap levels
+  subprocess.run(['texconv.exe', '-r', str(os.path.join(source_dir, '*.png')), '-f', format, '-y', '-m', '1', '-o', str(source_dir)])
