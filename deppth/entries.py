@@ -462,7 +462,7 @@ class AtlasEntry(EntryBase):
     stream.read(4)  # This is the size, but we don't care about this and it gets ignored
     self.version = 0
     numSubAtlases = int.from_bytes(stream.read(4), byteorder='big')
-    if (numSubAtlases == 2142336875):   # No, I can't explain this           
+    if (numSubAtlases == 0x7FB1776B):   # Alt+B in IDA and xref this, should land in sgg::GameAssetManager::ReadManifestAtlas and sgg::GameAssetManager::ReadAtlas
       self.version = stream.read_int()
       numSubAtlases = stream.read_int()
     self.subAtlases = []
