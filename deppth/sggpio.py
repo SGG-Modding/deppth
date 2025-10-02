@@ -465,7 +465,7 @@ class PackageWriter(PackageIO):
   def write(self, b):
     # If the bytes given won't fit in a chunk, we can't write it at all
     if len(b) > CHUNK_SIZE:
-      raise OSError(f'cannot write more than {CHUNK_SIZE} bytes at once')
+      raise OSError(f'cannot write more than {CHUNK_SIZE} bytes at once, use the cli argument -c (-codec) when packing and pass BC7 to use DDS BC7 compression for large textures')
 
     # Check space in this chunk
     availspace = len(self._write_buf.getvalue()) - self._write_buf.tell() - 1     # Why -1? Need room for end chunk byte

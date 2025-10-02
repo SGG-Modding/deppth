@@ -23,6 +23,10 @@ setup(
         "console_scripts": ['deppth = deppth.cli:main']
         },
     version = version,
+    include_package_data=True,
+    package_data={
+        "deppth": ["texconv/texconv.exe"]
+    },
     description = "Decompress, Extract, and Pack for Pyre, Transistor, and Hades",
     long_description = long_descr,
     author = "Neil Sandberg",

@@ -27,6 +27,7 @@ def main():
   pack_parser.add_argument('-s', '--source', metavar='source', default='', type=str, help='Path to the folder to pack, default is current folder')
   pack_parser.add_argument('-t', '--target', metavar='target', default='', help='Path of output file')
   pack_parser.add_argument('-e', '--entries', nargs='*', metavar='entry', help='Only pack entries matching these patterns')
+  pack_parser.add_argument('-c', '--codec', metavar='codec', default='RGBA', help='Specify the image codec to use for packing, default is RGBA, often used is BC7 because of max chunk size being 32MB')
   pack_parser.set_defaults(func=cli_pack)
 
   # Patch parser
@@ -57,8 +58,9 @@ def cli_pack(args):
   source = os.path.join(curdir, args.source)
   target = args.target
   entries = args.entries or []
+  codec = args.codec
 
-  pack(source, target, *entries, logger=lambda s: print(s))
+  pack(source, target, *entries, logger=lambda s: print(s), codec=codec)
 
 def cli_patch(args):
   package = args.package

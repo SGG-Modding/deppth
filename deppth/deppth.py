@@ -7,6 +7,7 @@ import sys
 import fnmatch
 import subprocess
 
+from importlib import resources
 from .sggpio import PackageWithManifestReader, PackageWithManifestWriter, PackageReader, PackageWriter
 from .entries import AtlasEntry, TextureEntry
 from .texpacking import build_atlases, transform_atlas
@@ -78,12 +79,12 @@ def pack(source_dir, package, *entries, subtextures=False, logger=lambda s: None
   if subtextures:
     temp_dir = source + '_temp'
     logger('Creating Texture Atlases...')
-    pack_subtextures(os.path.join(source, 'textures'), temp_dir, f'{os.path.splitext(target)[0]}_Textures', width=2200, height=2200)
+    pack_subtextures(os.path.join(source, 'textures'), temp_dir, f'{os.path.splitext(target)[0]}_Textures', width=4096, height=4096)
     logger('Success!')
     source = temp_dir
 
   texconv = False
-  if codec == 'bc7':
+  if codec.lower() == 'bc7':
     texconv = True
     texconvformat = 'BC7_UNORM'
 
@@ -171,7 +172,7 @@ def _entry_match(patterns, entry):
         return True
   return False
 
-def pack_subtextures(source_dir, target_dir, basename, width=2048, height=2048, include_hulls=False):
+def pack_subtextures(source_dir, target_dir, basename, width=4096, height=4096, include_hulls=False):
   tex_dir = os.path.join(target_dir, 'textures', 'atlases')
   atlas_dir = os.path.join(target_dir, 'manifest')
 
@@ -193,6 +194,13 @@ def pack_subtextures(source_dir, target_dir, basename, width=2048, height=2048, 
   # Restore old working directory
   os.chdir(wd)
   
+
+def get_texconv_path():
+  # Returns the absolute path to texconv.exe inside the package
+  return str(resources.files("deppth").joinpath("texconv/texconv.exe"))
+    
 def do_texconv(source_dir, format):
   # All png atlases, chosen format, overwrite, no mipmap levels
-  subprocess.run(['texconv.exe', '-r', str(os.path.join(source_dir, '*.png')), '-f', format, '-y', '-m', '1', '-o', str(source_dir)])
+  texconv_exe = get_texconv_path()
+  subprocess.run([texconv_exe, "-r", os.path.join(source_dir, "*.png"),
+                    "-f", format, "-y", "-m", "1", "-o", source_dir])
