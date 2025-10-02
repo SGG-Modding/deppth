@@ -50,7 +50,7 @@ def cli_extract(args):
   entries = args.entries or []
   subtextures = args.subtextures
 
-  extract(source, target, *entries, subtextures=subtextures)
+  extract(source, target, *entries, subtextures=subtextures, logger=lambda s: print(s))
 
 def cli_pack(args):
   curdir = os.getcwd()

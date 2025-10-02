@@ -1,6 +1,6 @@
 """Top-level API exposure of package actions"""
 
-__version__ = "0.1.0.0"
+__version__ = "0.1.1.0"
 
 import os
 import sys
@@ -42,7 +42,11 @@ def extract(package, target_dir, *entries, subtextures=False, logger=lambda s: N
         continue
 
       logger(f'Extracting entry {entry.name}')
-      entry.extract(target_dir, subtextures=subtextures)
+      allow_subtextures = subtextures
+      if subtextures and entry.manifest_entry is None:
+        allow_subtextures = False
+        logger(f'No atlas for subtextures found. Subtextures for this entry will not be extracted.')
+      entry.extract(target_dir, subtextures=allow_subtextures)
 
     if not f.manifest is None:
       for entry in f.manifest.values():
