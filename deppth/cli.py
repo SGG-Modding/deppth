@@ -1,6 +1,7 @@
 """Command-line interface for deppth functionality"""
 import os
 import argparse
+import sys
 
 from .deppth import list_contents, pack, patch, extract
 
@@ -37,6 +38,12 @@ def main():
   patch_parser.set_defaults(func=cli_patch)
 
   args = parser.parse_args()
+
+  # --- Check if no subcommand is provided ---
+  if not hasattr(args, 'func'):
+      parser.print_help()
+      sys.exit(1)  # exit with error code
+
   args.func(args)
 
 def cli_list(args):
