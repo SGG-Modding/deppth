@@ -1,6 +1,6 @@
 """Top-level API exposure of package actions"""
 
-__version__ = "0.1.1.0"
+__version__ = "0.1.2.0"
 
 import os
 import sys
