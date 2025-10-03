@@ -37,15 +37,15 @@ To do this, you can use the **pack** command with the **entries** flag to only i
 
 I can then distribute Launch_patch.pkg and Launch_patch.pkg_manifest. To apply this patch to the actual package, one would need to place these files in the same folder and then use the **patch** command to perform the patching. 
 
-     deppth pt Launch.pkg Launch_patch.pkg
+    deppth pt Launch.pkg Launch_patch.pkg
 
 This will replace any entries in the package with any matching entries in the patches and append any new entries in the patches. More than one patch can be applied at a time (later ones take precedence if there are conflicts).
 
- ## Deppth API
+## Deppth API
 
 The Deppth module exposes functions that perform the actions described above, plus a fourth (which is also part of the CLI) to list the contents of a package. It's basically just a programmer interface for the same things the CLI does -- the latter is just a wrapper for the former.
 
-    list_contents(name, *patterns, logger=lambda  s: None)
+    list(name, *patterns, logger=lambda  s: None)
     extract(package, target_dir, *entries, subtextures=False, logger=lambda  s: None)
     pack(source_dir, package, *entries, logger=lambda  s: None)
     patch(name, *patches, logger=lambda  s : None)
@@ -71,5 +71,45 @@ SGGPIO exports two functions, which really just wrap functionality in a variety 
 		for entry in pkg.manifest:
 			print(entry)
 
-    
+## Hades 2 Packing CLI Quick-Start
+
+In order to pack your `.png` files to be used in Hades II, open the CLI in the parent folder containing the images you want to pack.
+For example, here is a directory tree.
+
+```
+├ <deppth command line open here> 
+├── NewDeppthPackage
+│   ├── GUI
+│   │   ├── image1.png
+│   │   ├── image2.png
+│   │   ├── image3.png
+│   │   │ Icons
+│   │   │   ├── Iconimage.png
+```
+
+Using the command line in order to create your package for your mod, the package name must include the ``Mod-GUID`` (ThunderstoreTeamName-ModName) in order to work with Hell2Modding.
+
+    deppth hpk -s NewDeppthPackage -t ThunderstoreTeamName-NewIconPackage
+
+This will generate a folder called ThunderstoreTeamName-NewIconPackage in the parent directory that will be correctly formatted for deppth packaging, as well as 2 package files to use for your mod.
+
+This will also generate the paths needed to be used in the game.
+
+```
+ThunderstoreTeamName-NewIconPackage/GUI/image1.png
+ThunderstoreTeamName-NewIconPackage/GUI/image2.png
+ThunderstoreTeamName-NewIconPackage/GUI/image3.png
+and
+ThunderstoreTeamName-NewIconPackage/GUI/Icons/Iconimage.png
+```
+
+All image file paths will follow the file path inside the folder they were originally in, plus the package name appended to the start of it - in order to work with Hell2Modding.\
+For example, if the package was in the folder by itself its file path in-game would just be the ``ThunderstoreTeamName-NewIconPackage\\{Name}``, but if its path was `NewIconPkg/GUI/Icons` then its file path in-game would be `ThunderstoreTeamName-NewIconPackage\\GUI\\Icons\\{Name}`
+
+### Args
+
+    -s or --source is the name of the folder in which to recursively search for images
+    -t or --target is the name of the resulting folder to be packed by deppth, must be in the form of a mod GUID (ModAuthor-ModName).
+    -dp or --deppthpack (not used above) set to anything but "True" to disable automatic Deppth Packing.
+    -iH or --includehulls (not used above) set to anything but "False" to calculate hull points.
 
