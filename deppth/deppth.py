@@ -1,6 +1,6 @@
 """Top-level API exposure of package actions"""
 
-__version__ = "0.1.3.0"
+__version__ = "0.1.4.0"
 
 import os
 import sys
@@ -117,7 +117,7 @@ def pack(source_dir, package, *entries, subtextures=False, logger=lambda s: None
         texture_entry.import_file(entry_sheet_path)
         pkg_writer.write_entry(texture_entry)
       else:
-        logger(f'Could not find atlas image for {entry_name}. Entry will be skipped.')
+        logger(f'Could not find atlas image for {entry_sheet_path}. Entry will be skipped.')
 
 def patch(name, *patches, logger=lambda s : None):
   # Rename existing package/manifest so we can edit in place
@@ -200,7 +200,6 @@ def get_texconv_path():
   return str(resources.files("deppth").joinpath("texconv/texconv.exe"))
     
 def do_texconv(source_dir, format):
-  # All png atlases, chosen format, overwrite, no mipmap levels
   texconv_exe = get_texconv_path()
   subprocess.run([texconv_exe, "-r", os.path.join(source_dir, "*.png"),
                     "-f", format, "-y", "-m", "1", "-o", source_dir])

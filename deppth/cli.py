@@ -42,16 +42,17 @@ def main():
     hadespack_parser = subparsers.add_parser('hadespack', help='Format images into an atlas and manifest for packing with deppth', aliases=['hpk'])
     hadespack_parser.add_argument('-s', '--source', metavar='source', default='MyPackage', type=str, help='The directory to recursively search for images in, default is current folder')
     hadespack_parser.add_argument('-t', '--target', metavar='target', default='ThunderstoreTeamName-MyPackage', help='Filenames created will start with this plus a number')
+    hadespack_parser.add_argument('-c', '--codec', metavar='codec', default = "RGBA", help='Specify the image codec to use for packing, default is RGBA, often used is BC7 because of max chunk size being 32MB')
     hadespack_parser.add_argument('-dP', '--deppthpack', metavar='deppthpack', default='True', help='Automatically Pack your images and Manifest using deppth')
     hadespack_parser.add_argument('-iH', '--includehulls', metavar='includehulls', default = "False", help='Set to anything if you want hull points computed and added')
     hadespack_parser.set_defaults(func=cli_hadespack)
 
     args = parser.parse_args()
 
-    # --- Check if no subcommand is provided ---
+    # Print help if no arguments were provided
     if not hasattr(args, 'func'):
         parser.print_help()
-        sys.exit(1)  # exit with error code
+        sys.exit(1)
 
     args.func(args)
 
@@ -81,6 +82,7 @@ def cli_pack(args):
 def cli_hadespack(args):
     source = args.source
     target = args.target
+    codec = args.codec
 
     deppth = True
     if args.deppthpack != "True":
@@ -90,7 +92,7 @@ def cli_hadespack(args):
     if args.includehulls != "False":
         hulls = True
 
-    build_atlases(source, target, deppth, hulls)
+    build_atlases(source, target, deppth, hulls, codec=codec)
 
 def cli_patch(args):
     package = args.package
