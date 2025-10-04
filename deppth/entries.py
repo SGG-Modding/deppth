@@ -8,6 +8,25 @@ except ImportError: pass
 
 _entry_types = {}                   # Stores a mapping of known entry types from their byte codes
 
+def get_unique_export_path(path):
+    """
+    Returns a unique file path by appending a number before the file extension if the path already exists.
+    For example, if 'file.txt' exists, returns 'file_1.txt', 'file_2.txt', etc.
+    """
+    if not os.path.exists(path):
+        return path
+
+    directory, filename = os.path.split(path)
+    name, ext = os.path.splitext(filename)
+    counter = 1
+    while True:
+        new_filename = f"{name}_{counter}{ext}"
+        new_path = os.path.join(directory, new_filename)
+        if not os.path.exists(new_path):
+            return new_path
+        counter += 1
+
+
 def get_entry(b, stream, is_manifest=False):
   return _entry_types[b](stream, isManifest=is_manifest)
 
@@ -160,7 +179,8 @@ class EntryBase(ABC):
     return True
 
   def _extraction_path(self, target):
-    return os.path.join(target, self.name.split('\\')[-1])
+    initial_path = os.path.join(target, self.name.split('\\')[-1])
+    return get_unique_export_path(initial_path)
 
 
 class XNBAssetEntryBase(EntryBase):
@@ -209,7 +229,8 @@ class XNBAssetEntryBase(EntryBase):
     return True
 
   def _extraction_path(self, target):
-    return os.path.join(target, 'textures', self.name.split('\\')[-1])
+    initial_path = os.path.join(target, 'textures', self.name.split('\\')[-1])
+    return get_unique_export_path(initial_path)
 
 
 @entry('texture', b'\xAD')
@@ -373,7 +394,8 @@ class TextureEntry(XNBAssetEntryBase):
       subtexture = self._get_original_image(subimage, subatlas['originalSize'], subatlas['topLeft'], subatlas['scaleRatio'])
       subatlasdir, subatlasfile = os.path.split(subatlas['name'])
       os.makedirs(os.path.join(target, subatlasdir), exist_ok=True)
-      subtexture.save(os.path.join(target, subatlasdir, f'{subatlasfile}.png'))
+      subtexture_path = get_unique_export_path(os.path.join(target, subatlasdir, f'{subatlasfile}.png'))
+      subtexture.save(subtexture_path)
 
   def _get_original_image(self, image, original_size, top_left, scale_ratio):
     canvas_width = round(original_size['x']/scale_ratio['x'])
@@ -384,7 +406,8 @@ class TextureEntry(XNBAssetEntryBase):
     return canvas
 
   def _extraction_path(self, target):
-    return os.path.join(target, 'textures', 'atlases', self.name.split('\\')[-1])
+    initial_path = os.path.join(target, 'textures', 'atlases', self.name.split('\\')[-1])
+    return get_unique_export_path(initial_path)
 
 
 @entry('texture3d', b'\xAA')
@@ -401,7 +424,8 @@ class Texture3DEntry(XNBAssetEntryBase):
   unsupported.
   """
   def _extraction_path(self, target):
-    return os.path.join(target, 'textures', '3d', self.name.split('\\')[-1])
+    initial_path = os.path.join(target, 'textures', '3d', self.name.split('\\')[-1])
+    return get_unique_export_path(initial_path)
 
 
 @entry('bink', b'\xBB')
@@ -444,7 +468,8 @@ class BinkEntry(EntryBase):
     super().extract(target, **kwargs)
 
   def _extraction_path(self, target):
-    return os.path.join(target, 'bink_refs', self.name.split('\\')[-1])
+    initial_path = os.path.join(target, 'bink_refs', self.name.split('\\')[-1])
+    return get_unique_export_path(initial_path)
 
 
 @entry('atlas', b'\xDE')
@@ -607,7 +632,8 @@ class AtlasEntry(EntryBase):
     return True
   
   def _extraction_path(self, target):
-    return os.path.join(target, 'manifest', self.name.split('\\')[-1])
+    initial_path = os.path.join(target, 'manifest', self.name.split('\\')[-1])
+    return get_unique_export_path(initial_path)
 
 
 @entry('binkAtlas', b'\xEE')
@@ -658,7 +684,8 @@ class BinkAtlasEntry(EntryBase):
     super().extract(target, **kwargs)
 
   def _extraction_path(self, target):
-    return os.path.join(target, 'manifest', self.name.split('\\')[-1])
+    initial_path = os.path.join(target, 'manifest', self.name.split('\\')[-1])
+    return get_unique_export_path(initial_path)
 
 
 @entry('include', b'\xCC')
@@ -710,6 +737,7 @@ class SpineEntry(EntryBase):
     super().extract(target, **kwargs)
 
   def _extraction_path(self, target):
-    return os.path.join(target, 'spines', self.name.split('\\')[-1])
+    initial_path = os.path.join(target, 'spines', self.name.split('\\')[-1])
+    return get_unique_export_path(initial_path)
 
 
