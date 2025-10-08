@@ -1,12 +1,11 @@
 from pathlib import Path
 from .utils import requires
-# from deppth.texpacking import get_hull_points, transform_hull
 from deppth.entries import AtlasEntry
+
 import json
 import os
 import shutil
 import re
-from .deppth import pack
 
 try:
     import scipy.spatial
@@ -115,7 +114,8 @@ def build_atlases_hades(source_dir, target_dir, deppth_pack=True, include_hulls=
 
     # Create the packages
     if deppth_pack:
-      pack(target_dir, f'{target_dir}.pkg', *[], logger=lambda s: print(s), codec=codec)
+        from .deppth import pack
+        pack(target_dir, f'{target_dir}.pkg', *[], logger=lambda s: print(s), codec=codec)
 
     # print the manifest paths, so its easy to see the game path
     print("\nManifest Paths - Use in Codebase:")
@@ -162,7 +162,7 @@ def transform_atlas(target_dir, basename, filename, namemap, hulls={}, source_di
         frames = ptp_atlas['frames']
         atlas = AtlasEntry()
         atlas.version = 4
-        atlas.name = f'bin\\Win\\Atlases\\{os.path.splitext(filename)[0]}'
+        atlas.name = f'bin/Win/Atlases/{os.path.splitext(filename)[0]}'
         atlas.referencedTextureName = atlas.name
         atlas.isReference = True
         atlas.subAtlases = []
