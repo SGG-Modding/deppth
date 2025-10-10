@@ -17,19 +17,19 @@ with open("README.md", "rb") as f:
  
  
 setup(
-    name = "deppth",
-    packages = ["deppth"],
+    name = "deppth2",
+    packages = ["deppth2"],
     entry_points = {
-        "console_scripts": ['deppth = deppth.cli:main']
+        "console_scripts": ['deppth2 = deppth.cli:main']
         },
     version = version,
     include_package_data=True,
     package_data={
-        "deppth": ["texconv/texconv.exe"]
+        "deppth2": ["texconv/texconv.exe"]
     },
-    description = "Decompress, Extract, and Pack for Pyre, Transistor, and Hades",
+    description = "Decompress, Extract, and Pack for Pyre, Transistor, Hades, and Hades 2",
     long_description = long_descr,
-    author = "Neil Sandberg",
-    author_email = "neil.sandberg@gmail.com",
+    author = "SGG Modding",
+    author_email = "xiaoxiao921@hotmail.fr",
     url = "",
     )
