@@ -7,7 +7,7 @@ from setuptools import setup
  
 version = re.search(
     '^__version__\s*=\s*"(.*)"',
-    open('deppth/deppth.py').read(),
+    open('deppth2/deppth2.py').read(),
     re.M
     ).group(1)
  
@@ -20,7 +20,7 @@ setup(
     name = "deppth2",
     packages = ["deppth2"],
     entry_points = {
-        "console_scripts": ['deppth2 = deppth.cli:main']
+        "console_scripts": ['deppth2 = deppth2.cli:main']
         },
     version = version,
     include_package_data=True,

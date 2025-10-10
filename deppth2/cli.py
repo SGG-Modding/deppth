@@ -1,13 +1,13 @@
-"""Command-line interface for deppth functionality"""
+"""Command-line interface for deppth2 functionality"""
 import os
 import argparse
 import sys
 
-from .deppth import list_contents, pack, patch, extract
+from .deppth2 import list_contents, pack, patch, extract
 from .texpacking import build_atlases_hades
 
 def main():
-    parser = argparse.ArgumentParser(prog='deppth', description='Decompress, Extract, Pack for Pyre, Transistor, and Hades')
+    parser = argparse.ArgumentParser(prog='deppth2', description='Decompress, Extract, Pack for Pyre, Transistor, and Hades')
     subparsers = parser.add_subparsers(help='The action to perform', dest='action')
 
     # List parser
@@ -39,11 +39,11 @@ def main():
     patch_parser.set_defaults(func=cli_patch)
 
     # Pack textures
-    hadespack_parser = subparsers.add_parser('hadespack', help='Format images into an atlas and manifest for packing with deppth', aliases=['hpk'])
+    hadespack_parser = subparsers.add_parser('hadespack', help='Format images into an atlas and manifest for packing with deppth2', aliases=['hpk'])
     hadespack_parser.add_argument('-s', '--source', metavar='source', default='MyPackage', type=str, help='The directory to recursively search for images in, default is current folder')
     hadespack_parser.add_argument('-t', '--target', metavar='target', default='ThunderstoreTeamName-MyPackage', help='Filenames created will start with this plus a number')
     hadespack_parser.add_argument('-c', '--codec', metavar='codec', default = "RGBA", help='Specify the image codec to use for packing, default is RGBA, often used is BC7 because of max chunk size being 32MB')
-    hadespack_parser.add_argument('-dP', '--deppthpack', metavar='deppthpack', default='True', help='Automatically Pack your images and Manifest using deppth')
+    hadespack_parser.add_argument('-dP', '--deppthpack', metavar='deppthpack', default='True', help='Automatically Pack your images and Manifest using deppth2')
     hadespack_parser.add_argument('-iH', '--includehulls', metavar='includehulls', default = "False", help='Set to anything if you want hull points computed and added')
     hadespack_parser.set_defaults(func=cli_hadespack)
 
@@ -84,15 +84,15 @@ def cli_hadespack(args):
     target = args.target
     codec = args.codec
 
-    deppth = True
+    deppth2 = True
     if args.deppthpack != "True":
-        deppth = False
+        deppth2 = False
 
     hulls = False
     if args.includehulls != "False":
         hulls = True
 
-    build_atlases_hades(source, target, deppth, hulls, codec=codec)
+    build_atlases_hades(source, target, deppth2, hulls, codec=codec)
 
 def cli_patch(args):
     package = args.package
