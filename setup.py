@@ -29,6 +29,7 @@ setup(
     },
     description = "Decompress, Extract, and Pack for Pyre, Transistor, Hades, and Hades 2",
     long_description = long_descr,
+    long_description_content_type='text/markdown',
     author = "SGG Modding",
     author_email = "xiaoxiao921@hotmail.fr",
     url = "",

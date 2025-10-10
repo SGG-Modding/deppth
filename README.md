@@ -5,7 +5,7 @@ Deppth2 is a high-level I/O interface for package files in the games Transistor,
 
 ## Installation
 
-To install Deppth2, download the latest [wheel](https://github.com/SGG-Modding/deppth/releases) and `pip install` it. Then read the following instructions to install dependencies.
+To install Deppth2, `pip install deppth2` or download the latest [wheel](https://github.com/SGG-Modding/deppth/releases) and `pip install` it. Then read the following instructions to install dependencies.
 
 ### Dependencies
 
@@ -44,11 +44,12 @@ This will replace any entries in the package with any matching entries in the pa
 ## Deppth2 API
 
 The Deppth2 module exposes functions that perform the actions described above, plus a fourth (which is also part of the CLI) to list the contents of a package. It's basically just a programmer interface for the same things the CLI does -- the latter is just a wrapper for the former.
-
+```py
     list(name, *patterns, logger=lambda  s: None)
     extract(package, target_dir, *entries, subtextures=False, logger=lambda  s: None)
     pack(source_dir, package, *entries, logger=lambda  s: None)
     patch(name, *patches, logger=lambda  s : None)
+```
 
 The logger kwarg allows for customization of output of these functions -- for example, you may want to write to a file instead of print to screen.
 
