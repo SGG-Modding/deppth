@@ -1,6 +1,6 @@
 """Top-level API exposure of package actions"""
 
-__version__ = "0.1.4.0"
+__version__ = "0.1.5.0"
 
 import os
 import sys
@@ -10,8 +10,7 @@ import subprocess
 from importlib import resources
 from .sggpio import PackageWithManifestReader, PackageWithManifestWriter, PackageReader, PackageWriter
 from .entries import AtlasEntry, TextureEntry
-from .texpacking import build_atlases, transform_atlas
- 
+
 def list_contents(name, *patterns, logger=lambda s: None):
   with PackageWithManifestReader(name) as f:
     for entry in f:
@@ -105,7 +104,7 @@ def pack(source_dir, package, *entries, subtextures=False, logger=lambda s: None
   
   with PackageWriter(target, compressor='lz4') as pkg_writer, PackageWriter(f'{target}_manifest') as manifest_writer:
     for manifest_entry in manifest_entries:
-      entry_name = manifest_entry.name.split('\\')[-1]
+      entry_name = os.path.basename(manifest_entry.name)
       entry_sheet_path = os.path.join(source, 'textures', 'atlases', f'{entry_name}.DDS')
       if not os.path.exists(entry_sheet_path):
         entry_sheet_path = os.path.join(source, 'textures', 'atlases', f'{entry_name}.png')
@@ -173,6 +172,8 @@ def _entry_match(patterns, entry):
   return False
 
 def pack_subtextures(source_dir, target_dir, basename, width=4096, height=4096, include_hulls=False):
+  from .texpacking import build_atlases, transform_atlas
+
   tex_dir = os.path.join(target_dir, 'textures', 'atlases')
   atlas_dir = os.path.join(target_dir, 'manifest')
 
@@ -193,12 +194,11 @@ def pack_subtextures(source_dir, target_dir, basename, width=4096, height=4096, 
 
   # Restore old working directory
   os.chdir(wd)
-  
 
 def get_texconv_path():
   # Returns the absolute path to texconv.exe inside the package
   return str(resources.files("deppth").joinpath("texconv/texconv.exe"))
-    
+
 def do_texconv(source_dir, format):
   texconv_exe = get_texconv_path()
   subprocess.run([texconv_exe, "-r", os.path.join(source_dir, "*.png"),

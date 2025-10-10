@@ -110,6 +110,6 @@ For example, if the package was in the folder by itself its file path in-game wo
 
     -s or --source is the name of the folder in which to recursively search for images
     -t or --target is the name of the resulting folder to be packed by deppth, must be in the form of a mod GUID (ModAuthor-ModName).
+    -c or --codec is to specify the image codec to use for packing, default is RGBA, often used is BC7 because of max chunk size being 32MB.
     -dp or --deppthpack (not used above) set to anything but "True" to disable automatic Deppth Packing.
     -iH or --includehulls (not used above) set to anything but "False" to calculate hull points.
-

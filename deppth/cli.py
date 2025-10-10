@@ -4,7 +4,7 @@ import argparse
 import sys
 
 from .deppth import list_contents, pack, patch, extract
-from .texture_packing_wheel import build_atlases
+from .texpacking import build_atlases_hades
 
 def main():
     parser = argparse.ArgumentParser(prog='deppth', description='Decompress, Extract, Pack for Pyre, Transistor, and Hades')
@@ -92,7 +92,7 @@ def cli_hadespack(args):
     if args.includehulls != "False":
         hulls = True
 
-    build_atlases(source, target, deppth, hulls, codec=codec)
+    build_atlases_hades(source, target, deppth, hulls, codec=codec)
 
 def cli_patch(args):
     package = args.package
