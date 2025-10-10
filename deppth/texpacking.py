@@ -86,7 +86,7 @@ def build_atlases_hades(source_dir, target_dir, deppth_pack=True, include_hulls=
     namemap[filename.name] = str(filename)
 
   # Perfom the packing. This will create the spritesheets and primitive atlases, which we'll need to turn to usable ones
-  packer = PyTexturePacker.Packer.create(max_width=2880, max_height=2880, bg_color=0x00000000, atlas_format='json', 
+  packer = PyTexturePacker.Packer.create(max_width=4096, max_height=4096, bg_color=0x00000000, atlas_format='json', 
   enable_rotated=False, trim_mode=1, border_padding=0, shape_padding=0)
   packer.pack(files, f'{basename}%d')
 
