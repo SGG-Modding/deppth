@@ -35,14 +35,14 @@ def build_atlases(source_dir, target_dir, basename, size, include_hulls=False):
     
     return (hulls, namemap)
 
-def build_atlases_hades(source_dir, target_dir, deppth_pack=True, include_hulls=False, logger=lambda s: None, codec='RGBA'):
+def build_atlases_hades(source_dir, target_dir, deppth2_pack=True, include_hulls=False, logger=lambda s: None, codec='RGBA'):
     """
     Build texture atlases from images within a source directory.
 
     Args:
         source_dir (str): The root directory to recursively search for images.
         target_dir (str): The target directory where the atlases will be saved. The atlases filenames will be named after the target directory name. The .pkg file too. (If created)
-        deppth_pack (bool, optional): If True, automatically call pack for putting the built atlases into a SGG .pkg file. Defaults to True.
+        deppth2_pack (bool, optional): If True, automatically call pack for putting the built atlases into a SGG .pkg file. Defaults to True.
         include_hulls (bool, optional): If True, computes convex hull points of images 
                                         and includes them in the atlas data. Defaults to False.
         logger (callable, optional): A logging function that accepts a single string argument.
@@ -86,7 +86,7 @@ def build_atlases_hades(source_dir, target_dir, deppth_pack=True, include_hulls=
         namemap[filename.name] = str(filename)
 
     # Perfom the packing. This will create the spritesheets and primitive atlases, which we'll need to turn to usable ones
-    packer = PyTexturePacker.Packer.create(max_width=2880, max_height=2880, bg_color=0x00000000, atlas_format='json', 
+    packer = PyTexturePacker.Packer.create(max_width=4096, max_height=4096, bg_color=0x00000000, atlas_format='json', 
     enable_rotated=False, trim_mode=1, border_padding=0, shape_padding=1)
     packer.pack(files, f'{basename}%d')
 
@@ -113,7 +113,7 @@ def build_atlases_hades(source_dir, target_dir, deppth_pack=True, include_hulls=
         index += 1
 
     # Create the packages
-    if deppth_pack:
+    if deppth2_pack:
         from .deppth2 import pack
         pack(target_dir, f'{target_dir}.pkg', *[], logger=lambda s: print(s), codec=codec)
 
