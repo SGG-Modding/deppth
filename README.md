@@ -9,11 +9,10 @@ To install Deppth2, `pip install deppth2` or download the latest [wheel](https:/
 
 ### Dependencies
 
-Deppth2 technically has no required dependencies outside of Python's core modules, but you may find its functionality very limited without also installing the following optional dependencies. If an optional dependency is missing, Deppth2 will abort an operation dependent on that module informing you of the missing module.
+Deppth2 technically has two required dependencies, `pillow` and `lz4`, as they are the primary tools that deppth2 uses. If an optional dependency is missing, Deppth2 will abort an operation dependent on that module informing you of the missing module.
 
-Packages primarily contain sprite sheets. Deppth2 uses Pillow to work with the image data within. If you plan to export/import sprite sheets to/from image files, you'll need to install that: `pip install pillow`.
-
-Hades uses LZ4 compression on its packages. If you plan to work with these packages, you'll want to install the LZ4 module: `pip install lz4`.
+> As packages primarily contain sprite sheets, deppth2 uses Pillow to work with the image data within. <br>
+> Hades/Hades 2 uses LZ4 compression on its packages, and as such, lz4 is automatically installed to allow for deppth2 to work with Hades/Hades 2.
 
 Transistor and Pyre both use LZF compression on their packages. If you plan to work with these packages, you'll want to install the LZF module: `pip install lzf`. You may need to install C++ build tools to get this dependency to install correctly.
 

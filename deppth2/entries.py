@@ -212,6 +212,8 @@ class XNBAssetEntryBase(EntryBase):
   def _export(self, path):
     if os.path.splitext(path)[1] != '.xnb':
       return super()._export(path)
+    
+    os.makedirs(os.path.dirname(path), exist_ok=True)
 
     with open(path, 'wb') as f:
       f.write(self.data)

@@ -24,6 +24,7 @@ setup(
         },
     version = version,
     include_package_data=True,
+    install_requires=['pillow', 'lz4'],
     package_data={
         "deppth2": ["texconv/texconv.exe"]
     },
