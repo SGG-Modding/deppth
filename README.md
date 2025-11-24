@@ -9,10 +9,11 @@ To install Deppth2, `pip install deppth2` or download the latest [wheel](https:/
 
 ### Dependencies
 
-Deppth2 technically has two required dependencies, `pillow` and `lz4`, as they are the primary tools that deppth2 uses. If an optional dependency is missing, Deppth2 will abort an operation dependent on that module informing you of the missing module.
+Deppth2 has three required dependencies, `pillow`, `PyTexturePacker` and `lz4`, as they are the primary tools that deppth2 uses. If an optional dependency is missing, Deppth2 will abort an operation dependent on that module informing you of the missing module.
 
-> As packages primarily contain sprite sheets, deppth2 uses Pillow to work with the image data within. <br>
-> Hades/Hades 2 uses LZ4 compression on its packages, and as such, lz4 is automatically installed to allow for deppth2 to work with Hades/Hades 2.
+> As packages primarily contain sprite sheets, deppth2 uses [Pillow](https://pypi.org/project/pillow/) to work with the image data within. <br>
+> [PyTexturePacker](https://pypi.org/project/PyTexturePacker/) is required to create spiresheets and atlases. <br>
+> Hades/Hades 2 uses LZ4 compression on its packages, and as such, [lz4](https://pypi.org/project/lz4/) is automatically installed to allow for deppth2 to work with Hades/Hades 2.
 
 Transistor and Pyre both use LZF compression on their packages. If you plan to work with these packages, you'll want to install the LZF module: `pip install lzf`. You may need to install C++ build tools to get this dependency to install correctly.
 
@@ -34,7 +35,7 @@ To do this, you can use the **pack** command with the **entries** flag to only i
 
     deppth2 pk -s Launch -t Launch_patch.pkg -e *Launch_Textures02*
 
-I can then distribute Launch_patch.pkg and Launch_patch.pkg_manifest. To apply this patch to the actual package, one would need to place these files in the same folder and then use the **patch** command to perform the patching. 
+I can then distribute Launch_patch.pkg and Launch_patch.pkg_manifest. To apply this patch to the actual package, one would need to place these files in the same folder and then use the **patch** command to perform the patching.
 
     deppth2 pt Launch.pkg Launch_patch.pkg
 
@@ -65,7 +66,7 @@ SGGPIO exports two functions, which really just wrap functionality in a variety 
 	    with sggpio.open_package('Launch_copy.pkg', 'wm') as pkg_out:
 		    for entry in pkg:
 			    pkg_out.write_entry_with_manifest(entry)
-	
+
 	# Print manifest contents of copy to verify success
 	with sggpio.open_package('Launch_copy.pkg', 'rm') as pkg:
 		for entry in pkg.manifest:
@@ -77,7 +78,7 @@ In order to pack your `.png` files to be used in Hades II, open the CLI in the p
 For example, here is a directory tree.
 
 ```
-├ <deppth command line open here> 
+├ <deppth command line open here>
 ├── NewDeppthPackage
 │   ├── GUI
 │   │   ├── image1.png

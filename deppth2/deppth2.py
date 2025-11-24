@@ -1,6 +1,6 @@
 """Top-level API exposure of package actions"""
 
-__version__ = "0.1.6.2"
+__version__ = "0.1.6.3"
 
 import os
 import sys
@@ -16,7 +16,7 @@ def list_contents(name, *patterns, logger=lambda s: None):
     for entry in f:
       if not _entry_match(patterns, entry):
         continue
-      
+
       logger(f'{entry.name}')
 
       atlas = entry.manifest_entry
@@ -52,7 +52,7 @@ def extract(package, target_dir, *entries, subtextures=False, logger=lambda s: N
       for entry in f.manifest.values():
         if not _entry_match(entries, entry):
           continue
-        
+
         logger(f'Extracting manifest entry {entry.name}')
         entry.extract(target_dir, subtextures=subtextures, includes=includes)
 
@@ -101,7 +101,7 @@ def pack(source_dir, package, *entries, subtextures=False, logger=lambda s: None
         continue
       logger(entry.name)
       manifest_entries.append(entry)
-  
+
   with PackageWriter(target, compressor='lz4') as pkg_writer, PackageWriter(f'{target}_manifest') as manifest_writer:
     for manifest_entry in manifest_entries:
       entry_name = os.path.basename(manifest_entry.name)
@@ -149,7 +149,7 @@ def patch(name, *patches, logger=lambda s : None):
     for entry in patch_entries.values():
       logger(f'Appending entry {entry.name}')
       target.write_entry_with_manifest(entry)
-        
+
   # Delete the old files
   os.remove(package_old_path)
   os.remove(manifest_old_path)
