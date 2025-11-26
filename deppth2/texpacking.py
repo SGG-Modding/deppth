@@ -2,17 +2,13 @@ from pathlib import Path
 from .utils import requires
 from deppth2.entries import AtlasEntry
 
-import json
-import os
-import shutil
-import re
+import json, os, shutil, re, tempfile
 
 try:
     import PyTexturePacker
     import PIL.Image
-    import scipy.spatial
 except ImportError as e:
-    print("These scripts requires the scipy, PyTexturePacker and pillow packages. Please install them with pip.")
+    print("These scripts requires the PyTexturePacker and pillow packages. Please install them with pip.")
 
 # To use these scripts, you'll need to pip install scipy and PyTexturePacker in addition to deppth and pillow
 @requires('PIL.Image', 'PyTexturePacker')
@@ -29,12 +25,13 @@ def build_atlases(source_dir, target_dir, basename, size, include_hulls=False):
             namemap[filename.name] = str(filename)
 
     # Perfom the packing. This will create the spritesheets and primitive atlases, which we'll need to turn to usable ones
-    packer = PyTexturePacker.Packer.create(max_width=size[0], max_height=size[1], bg_color=0x00000000, atlas_format='json', 
+    packer = PyTexturePacker.Packer.create(max_width=size[0], max_height=size[1], bg_color=0x00000000, atlas_format='json',
         enable_rotated=False, trim_mode=1, border_padding=0, shape_padding=0)
     packer.pack(files, f'{basename}%d', target_dir)
-    
+
     return (hulls, namemap)
 
+@requires('PIL.Image', 'PyTexturePacker')
 def build_atlases_hades(source_dir, target_dir, deppth2_pack=True, include_hulls=False, logger=lambda s: None, codec='RGBA'):
     """
     Build texture atlases from images within a source directory.
@@ -43,22 +40,19 @@ def build_atlases_hades(source_dir, target_dir, deppth2_pack=True, include_hulls
         source_dir (str): The root directory to recursively search for images.
         target_dir (str): The target directory where the atlases will be saved. The atlases filenames will be named after the target directory name. The .pkg file too. (If created)
         deppth2_pack (bool, optional): If True, automatically call pack for putting the built atlases into a SGG .pkg file. Defaults to True.
-        include_hulls (bool, optional): If True, computes convex hull points of images 
-                                        and includes them in the atlas data. Defaults to False.
-        logger (callable, optional): A logging function that accepts a single string argument.
-                                     Defaults to a no-op (does nothing).
+        include_hulls (bool, optional): If True, computes convex hull points of images and includes them in the atlas data. Defaults to False.
+        logger (callable, optional): A logging function that accepts a single string argument. Defaults to a no-op (does nothing).
 
     Returns:
         None
     """
 
-    print(target_dir)
+    print("Targetted dir:", target_dir)
     basename = os.path.splitext(os.path.basename(target_dir))[0]
-    print(basename)
+    print("_PLUGIN.guid, basename:", basename)
 
     # Regex check to make sure user inserts a mod guid type basename
     regexpattern = r"^[a-z0-9]+(\w+[a-z0-9])?-\w+$"
-    
     if re.match(regexpattern, basename, flags=re.I|re.A):
         pass
     else:
@@ -68,7 +62,6 @@ def build_atlases_hades(source_dir, target_dir, deppth2_pack=True, include_hulls
     if os.path.isdir(target_dir) == True:
         print(f"Target directory {target_dir} already exists, deleting it.")
         shutil.rmtree(target_dir)
-    
     os.mkdir(target_dir, 0o666)
     os.mkdir(os.path.join(target_dir, "manifest"), 0o666)
     os.mkdir(os.path.join(target_dir, "textures"), 0o666)
@@ -77,24 +70,53 @@ def build_atlases_hades(source_dir, target_dir, deppth2_pack=True, include_hulls
     files = find_files(source_dir)
     hulls = {}
     namemap = {}
-    for filename in files:
+
+    temp_dir = tempfile.mkdtemp()
+    temp_name_mapping = {}
+    temp_files = []
+
+    for file_path in files:
+        rel_path = os.path.relpath(file_path, source_dir)
+
         # Build hulls for each image so we can store them later
         if include_hulls:
-            hulls[filename.name] = get_hull_points(filename)
+            hulls[rel_path] = get_hull_points(file_path)
         else:
-            hulls[filename.name] = []
-        namemap[filename.name] = str(filename)
+            hulls[rel_path] = []
+        namemap[rel_path] = str(file_path)
 
-    # Perfom the packing. This will create the spritesheets and primitive atlases, which we'll need to turn to usable ones
-    packer = PyTexturePacker.Packer.create(max_width=4096, max_height=4096, bg_color=0x00000000, atlas_format='json', 
-    enable_rotated=False, trim_mode=1, border_padding=0, shape_padding=1)
-    packer.pack(files, f'{basename}%d')
+    # Create temporary images with unique names for PyTexturePacker to not override when creating the json file
+    for rel_path, original_path in namemap.items():
+        temp_filename = f"img_{len(temp_files)}.png"
+        temp_path = os.path.join(temp_dir, temp_filename)
+
+        shutil.copy2(original_path, temp_path)
+        temp_files.append(temp_path)
+        temp_name_mapping[temp_filename] = rel_path
+
+    packer = PyTexturePacker.Packer.create(max_width=4096, max_height=4096, bg_color=0x00000000, atlas_format='json',
+        enable_rotated=False, trim_mode=1, border_padding=0, shape_padding=1)
+    packer.pack(temp_files, f'{basename}%d')#use temp instead
 
     # Now, loop through the atlases made and transform them to be the right format
     index = 0
     atlases = []
     manifest_paths = [] # Manifest Path Start
     while os.path.exists(f'{basename}{index}.json'):
+        with open(f'{basename}{index}.json', 'r') as f:
+            original_data = json.load(f)
+
+        # Set the temporary frame names back to path version
+        new_frames = {}
+        for temp_filename, frame_data in original_data['frames'].items():
+            final_path = temp_name_mapping[temp_filename].replace('/', '\\')
+            new_frames[final_path] = frame_data
+
+        original_data['frames'] = new_frames
+
+        with open(f'{basename}{index}.json', 'w') as f:
+            json.dump(original_data, f, indent=2)
+
         atlases.append(transform_atlas(target_dir, basename, f'{basename}{index}.json', namemap, hulls, source_dir, manifest_paths))
         os.remove(f'{basename}{index}.json')
         index += 1
@@ -117,13 +139,23 @@ def build_atlases_hades(source_dir, target_dir, deppth2_pack=True, include_hulls
         from .deppth2 import pack
         pack(target_dir, f'{target_dir}.pkg', *[], logger=lambda s: print(s), codec=codec)
 
-    # print the manifest paths, so its easy to see the game path
-    print("\nManifest Paths, _PLUGIN.guid followed by directory paths - Use in Codebase:\n")
+    print("\n" + "="*70)
+    print("Raw Paths, formatted: _PLUGIN.guid, path")
+    print("USAGE EXAMPLE: rom.path.combine(_PLUGIN.guid, 'GUI\\\\Screens\\\\image')")
+    print("="*70)
     for path in manifest_paths:
-        print(path)
+        path_clean = path.replace('/', '\\').replace('\\', '\\\\')
+        print(path_clean)
+
+    shutil.rmtree(temp_dir)
 
 @requires('scipy.spatial')
 def get_hull_points(path):
+    try:
+        import scipy.spatial
+    except ImportError as e:
+        print("To build hulls, you need the scipy package. Please install it with pip.")
+
     im = PIL.Image.open(path)
     points = []
 
@@ -184,7 +216,7 @@ def transform_atlas(target_dir, basename, filename, namemap, hulls={}, source_di
             subatlas['isMulti'] = False
             subatlas['isMip'] = False
             subatlas['isAlpha8'] = False
-            subatlas['hull'] = transform_hull(hulls[texture_name], subatlas['topLeft'], (subatlas['rect']['width'], subatlas['rect']['height']))
+            subatlas['hull'] = transform_hull(hulls.get(texture_name, []), subatlas['topLeft'], (subatlas['rect']['width'], subatlas['rect']['height']))
             atlas.subAtlases.append(subatlas)
 
     atlas.export_file(f'{os.path.splitext(filename)[0]}.atlas.json')
