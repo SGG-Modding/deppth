@@ -8,9 +8,9 @@ import shutil
 import re
 
 try:
-    import scipy.spatial
     import PyTexturePacker
     import PIL.Image
+    import scipy.spatial
 except ImportError as e:
     print("These scripts requires the scipy, PyTexturePacker and pillow packages. Please install them with pip.")
 
