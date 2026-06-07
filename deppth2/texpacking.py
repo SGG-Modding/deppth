@@ -158,7 +158,6 @@ def get_scale_ratio(path):
     if os.path.exists(image_manifest_path):
         with open(image_manifest_path, 'r') as f:
             image_manifest = json.load(f)
-        print(image_manifest)
         return image_manifest.get("scaleRatio", default_scale)
     return default_scale
 
@@ -215,7 +214,7 @@ def transform_atlas(target_dir, basename, filename, namemap, hulls={}, source_di
         for texture_name in frames:
             frame = frames[texture_name]
             subatlas = {}
-            subatlas['name'] = os.path.join(os.path.splitext(os.path.relpath(namemap[texture_name], source_dir))[0])
+            subatlas['name'] = os.path.join(basename, os.path.splitext(os.path.relpath(namemap[texture_name], source_dir))[0])
             manifest_paths.append(subatlas['name'])
             subatlas['topLeft'] = {'x': frame['spriteSourceSize']['x'], 'y': frame['spriteSourceSize']['y']}
             subatlas['scaleRatio'] = scaleRatioMap.get(texture_name, {'x': 1.0, 'y': 1.0 })
