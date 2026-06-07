@@ -380,6 +380,11 @@ class TextureEntry(XNBAssetEntryBase):
 
     self._export_subtextures(fullpath)
 
+  def _export_subatlas_manifest(self, subatlas, subtexture_path):
+    subatlas_manifest_path = os.path.splitext(subtexture_path)[0] + ".json"
+    with open(subatlas_manifest_path, 'w') as f:
+      json.dump(subatlas, f)
+
   @requires('PIL.Image')
   def _export_subtextures(self, target):
     # First, get the image out of the entry data
@@ -398,13 +403,13 @@ class TextureEntry(XNBAssetEntryBase):
       os.makedirs(os.path.join(target, subatlasdir), exist_ok=True)
       subtexture_path = get_unique_export_path(os.path.join(target, subatlasdir, f'{subatlasfile}.png'))
       subtexture.save(subtexture_path)
+      self._export_subatlas_manifest(subatlas, subtexture_path)
 
   def _get_original_image(self, image, original_size, top_left, scale_ratio):
     canvas_width = round(original_size['x']/scale_ratio['x'])
     canvas_height = round(original_size['y']/scale_ratio['y'])
     canvas = PIL.Image.new("RGBA", (canvas_width, canvas_height))
     canvas.paste(image, (top_left['x'], top_left['y']))
-    canvas.resize((original_size['x'], original_size['y']))
     return canvas
 
   def _extraction_path(self, target):
