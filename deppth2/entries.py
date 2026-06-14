@@ -247,7 +247,8 @@ class TextureEntry(XNBAssetEntryBase):
   """
   def extract(self, target, **kwargs):
     if 'subtextures' in kwargs and kwargs['subtextures']:
-      self._export_subtextures(os.path.join(target, 'textures'))
+      include_mip = kwargs.get("include_mip", False)
+      self._export_subtextures(os.path.join(target, 'textures'), include_mip)
     else:
       os.makedirs(os.path.join(target, 'textures', 'atlases'), exist_ok=True)
       self._export(self._extraction_path(target) + '.png')
@@ -381,23 +382,26 @@ class TextureEntry(XNBAssetEntryBase):
     self._export_subtextures(fullpath)
 
   @requires('PIL.Image')
-  def _export_subtextures(self, target):
+  def _export_subtextures(self, target, include_mip=False):
     # First, get the image out of the entry data
     image = self._get_image()
     atlas = self.manifest_entry
     for subatlas in atlas.subAtlases:
-      rect = subatlas['rect']
-      box = (rect['x'], 
-      rect['y'], 
-      rect['x']+rect['width'], 
-      rect['y']+rect['height'])
-      subimage = image.crop(box)
-      subtexture = self._get_original_image(subimage, subatlas['originalSize'], subatlas['topLeft'], subatlas['scaleRatio'])
-      subatlas_path = subatlas['name'].replace('\\', '/')
-      subatlasdir, subatlasfile = os.path.split(subatlas_path)
-      os.makedirs(os.path.join(target, subatlasdir), exist_ok=True)
-      subtexture_path = get_unique_export_path(os.path.join(target, subatlasdir, f'{subatlasfile}.png'))
-      subtexture.save(subtexture_path)
+      if not subatlas.get("isMip", False) or include_mip:
+        rect = subatlas['rect']
+        box = (
+          rect['x'],
+          rect['y'],
+          rect['x']+rect['width'],
+          rect['y']+rect['height']
+        )
+        subimage = image.crop(box)
+        subtexture = self._get_original_image(subimage, subatlas['originalSize'], subatlas['topLeft'], subatlas['scaleRatio'])
+        subatlas_path = subatlas['name'].replace('\\', '/')
+        subatlasdir, subatlasfile = os.path.split(subatlas_path)
+        os.makedirs(os.path.join(target, subatlasdir), exist_ok=True)
+        subtexture_path = get_unique_export_path(os.path.join(target, subatlasdir, f'{subatlasfile}.png'))
+        subtexture.save(subtexture_path)
 
   def _get_original_image(self, image, original_size, top_left, scale_ratio):
     canvas_width = round(original_size['x']/scale_ratio['x'])

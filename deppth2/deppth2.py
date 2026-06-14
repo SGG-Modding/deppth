@@ -25,11 +25,14 @@ def list_contents(name, *patterns, logger=lambda s: None):
           subname = subatlas['name']
           logger(f'  {subname}')
 
-def extract(package, target_dir, *entries, subtextures=False, logger=lambda s: None):
+def extract(package, target_dir, *entries, subtextures=False, logger=lambda s: None, include_mip=False):
   includes = []
 
   if len(target_dir) == 0:
     target_dir = os.path.splitext(package)[0]
+
+  if subtextures and not include_mip:
+    logger('Ignoring extraction of lower mip level sub textures.')
 
   os.makedirs(target_dir, exist_ok=True)
   with PackageWithManifestReader(package) as f:
@@ -46,7 +49,7 @@ def extract(package, target_dir, *entries, subtextures=False, logger=lambda s: N
       if subtextures and entry.manifest_entry is None:
         allow_subtextures = False
         logger(f'No atlas for subtextures found. Subtextures for this entry will not be extracted.')
-      entry.extract(target_dir, subtextures=allow_subtextures)
+      entry.extract(target_dir, subtextures=allow_subtextures, include_mip=include_mip)
 
     if not f.manifest is None:
       for entry in f.manifest.values():
@@ -54,7 +57,7 @@ def extract(package, target_dir, *entries, subtextures=False, logger=lambda s: N
           continue
 
         logger(f'Extracting manifest entry {entry.name}')
-        entry.extract(target_dir, subtextures=subtextures, includes=includes)
+        entry.extract(target_dir, subtextures=subtextures, includes=includes, include_mip=include_mip)
 
     if len(includes) > 0:
       include_dir = os.path.join(target_dir, 'manifest')

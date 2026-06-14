@@ -22,6 +22,7 @@ def main():
     extract_parser.add_argument('-t', '--target', metavar='target', default='', help='Where to extract the package')
     extract_parser.add_argument('-e', '--entries', nargs='*', metavar='entry', help='One or more entry names to extract')
     extract_parser.add_argument('-s', '--subtextures', action='store_true', default=False, help='Export subtextures instead of full atlases')
+    extract_parser.add_argument('--include-mip', action='store_true', default=False, help='Include lower mip levels of textures if available. Only applicable for subtexture extraction')
     extract_parser.set_defaults(func=cli_extract)
 
     # Pack parser
@@ -67,8 +68,9 @@ def cli_extract(args):
     target = args.target
     entries = args.entries or []
     subtextures = args.subtextures
+    include_mip = args.include_mip
 
-    extract(source, target, *entries, subtextures=subtextures, logger=lambda s: print(s))
+    extract(source, target, *entries, subtextures=subtextures, logger=lambda s: print(s), include_mip=include_mip)
 
 def cli_pack(args):
     curdir = os.getcwd()
