@@ -41,12 +41,18 @@ I can then distribute Launch_patch.pkg and Launch_patch.pkg_manifest. To apply t
 
 This will replace any entries in the package with any matching entries in the patches and append any new entries in the patches. More than one patch can be applied at a time (later ones take precedence if there are conflicts).
 
+To **extract** every subtexture instead of packed atlases use the `-s` or `--subtextures` flag.
+
+    deppth2 ex -s Launch.pkg
+
+This doesn't extract lower mip textures by default as they are irrelevant for most use cases. If you need to extract them you can use the `--include-mip` flag.
+
 ## Deppth2 API
 
 The Deppth2 module exposes functions that perform the actions described above, plus a fourth (which is also part of the CLI) to list the contents of a package. It's basically just a programmer interface for the same things the CLI does -- the latter is just a wrapper for the former.
 ```py
     list(name, *patterns, logger=lambda  s: None)
-    extract(package, target_dir, *entries, subtextures=False, logger=lambda  s: None)
+    extract(package, target_dir, *entries, subtextures=False, logger=lambda  s: None, include_mip=False)
     pack(source_dir, package, *entries, logger=lambda  s: None)
     patch(name, *patches, logger=lambda  s : None)
 ```
