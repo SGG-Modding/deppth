@@ -247,7 +247,8 @@ class TextureEntry(XNBAssetEntryBase):
   """
   def extract(self, target, **kwargs):
     if 'subtextures' in kwargs and kwargs['subtextures']:
-      self._export_subtextures(os.path.join(target, 'textures'))
+      include_mip = kwargs.get("include_mip", False)
+      self._export_subtextures(os.path.join(target, 'textures'), include_mip)
     else:
       os.makedirs(os.path.join(target, 'textures', 'atlases'), exist_ok=True)
       self._export(self._extraction_path(target) + '.png')
@@ -381,12 +382,12 @@ class TextureEntry(XNBAssetEntryBase):
     self._export_subtextures(fullpath)
 
   @requires('PIL.Image')
-  def _export_subtextures(self, target):
+  def _export_subtextures(self, target, include_mip=False):
     # First, get the image out of the entry data
     image = self._get_image()
     atlas = self.manifest_entry
     for subatlas in atlas.subAtlases:
-      if not subatlas.get("isMip", False):
+      if not subatlas.get("isMip", False) or include_mip:
         rect = subatlas['rect']
         box = (
           rect['x'],
