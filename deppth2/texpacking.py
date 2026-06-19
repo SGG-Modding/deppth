@@ -70,6 +70,8 @@ def build_atlases_hades(source_dir, target_dir, deppth2_pack=True, include_hulls
     files = find_files(source_dir)
     hulls = {}
     namemap = {}
+    scaleRatioMap = {}
+    manifestHulls = {}
 
     temp_dir = tempfile.mkdtemp()
     temp_name_mapping = {}
@@ -84,6 +86,9 @@ def build_atlases_hades(source_dir, target_dir, deppth2_pack=True, include_hulls
         else:
             hulls[rel_path] = []
         namemap[rel_path] = str(file_path)
+
+        scaleRatioMap[rel_path] = get_scale_ratio(file_path)
+        manifestHulls[rel_path] = get_hull_from_manifest(file_path)
 
     # Create temporary images with unique names for PyTexturePacker to not override when creating the json file
     for rel_path, original_path in namemap.items():
@@ -117,7 +122,7 @@ def build_atlases_hades(source_dir, target_dir, deppth2_pack=True, include_hulls
         with open(f'{basename}{index}.json', 'w') as f:
             json.dump(original_data, f, indent=2)
 
-        atlases.append(transform_atlas(target_dir, basename, f'{basename}{index}.json', namemap, hulls, source_dir, manifest_paths))
+        atlases.append(transform_atlas(target_dir, basename, f'{basename}{index}.json', namemap, hulls, source_dir, manifest_paths, scaleRatioMap=scaleRatioMap, manifestHulls=manifestHulls))
         os.remove(f'{basename}{index}.json')
         index += 1
 
@@ -149,7 +154,24 @@ def build_atlases_hades(source_dir, target_dir, deppth2_pack=True, include_hulls
 
     shutil.rmtree(temp_dir)
 
-@requires('scipy.spatial')
+def get_scale_ratio(path):
+    default_scale = {"x":1.0, "y":1.0}
+    image_manifest_path = os.path.splitext(path)[0] + ".json"
+    if os.path.exists(image_manifest_path):
+        with open(image_manifest_path, 'r') as f:
+            image_manifest = json.load(f)
+        return image_manifest.get("scaleRatio", default_scale)
+    return default_scale
+
+def get_hull_from_manifest(path):
+    default_hull = []
+    image_manifest_path = os.path.splitext(path)[0] + ".json"
+    if os.path.exists(image_manifest_path):
+        with open(image_manifest_path, 'r') as f:
+            image_manifest = json.load(f)
+        return image_manifest.get("hull", default_hull)
+    return default_hull
+
 def get_hull_points(path):
     try:
         import scipy.spatial
@@ -188,7 +210,7 @@ def find_files(source_dir):
         file_list.append(path)
     return file_list
 
-def transform_atlas(target_dir, basename, filename, namemap, hulls={}, source_dir='', manifest_paths=[]):
+def transform_atlas(target_dir, basename, filename, namemap, hulls={}, source_dir='', manifest_paths=[], scaleRatioMap = {}, manifestHulls = []):
     with open(filename) as f:
         ptp_atlas = json.load(f)
         frames = ptp_atlas['frames']
@@ -205,18 +227,22 @@ def transform_atlas(target_dir, basename, filename, namemap, hulls={}, source_di
             subatlas['name'] = os.path.join(basename, os.path.splitext(os.path.relpath(namemap[texture_name], source_dir))[0])
             manifest_paths.append(subatlas['name'])
             subatlas['topLeft'] = {'x': frame['spriteSourceSize']['x'], 'y': frame['spriteSourceSize']['y']}
-            subatlas['originalSize'] = {'x': frame['sourceSize']['w'], 'y': frame['sourceSize']['h']}
+            subatlas['scaleRatio'] = scaleRatioMap.get(texture_name, {'x': 1.0, 'y': 1.0 })
+            subatlas['originalSize'] = {
+                'x': round(frame['sourceSize']['w'] * subatlas['scaleRatio']['x']), 
+                'y': round(frame['sourceSize']['h'] * subatlas['scaleRatio']['y'])}
             subatlas['rect'] = {
                 'x': frame['frame']['x'],
                 'y': frame['frame']['y'],
                 'width': frame['frame']['w'],
                 'height': frame['frame']['h']
             }
-            subatlas['scaleRatio'] = {'x': 1.0, 'y': 1.0}
             subatlas['isMulti'] = False
             subatlas['isMip'] = False
             subatlas['isAlpha8'] = False
             subatlas['hull'] = transform_hull(hulls.get(texture_name, []), subatlas['topLeft'], (subatlas['rect']['width'], subatlas['rect']['height']))
+            if len(subatlas['hull']) == 0:
+                subatlas['hull'] = manifestHulls.get(texture_name, [])
             atlas.subAtlases.append(subatlas)
 
     atlas.export_file(f'{os.path.splitext(filename)[0]}.atlas.json')
