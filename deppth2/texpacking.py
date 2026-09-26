@@ -62,10 +62,10 @@ def build_atlases_hades(source_dir, target_dir, deppth2_pack=True, include_hulls
     if os.path.isdir(target_dir) == True:
         print(f"Target directory {target_dir} already exists, deleting it.")
         shutil.rmtree(target_dir)
-    os.mkdir(target_dir, 0o666)
-    os.mkdir(os.path.join(target_dir, "manifest"), 0o666)
-    os.mkdir(os.path.join(target_dir, "textures"), 0o666)
-    os.mkdir(os.path.join(target_dir, "textures", "atlases"), 0o666)
+    os.mkdir(target_dir)
+    os.mkdir(os.path.join(target_dir, "manifest"))
+    os.mkdir(os.path.join(target_dir, "textures"))
+    os.mkdir(os.path.join(target_dir, "textures", "atlases"))
 
     files = find_files(source_dir)
     hulls = {}
